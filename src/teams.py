@@ -2,7 +2,7 @@
 
 import random
 import math
-import core
+import requests
 
 class Hero:
     """ Represents a superheroe. """
@@ -12,40 +12,40 @@ class Hero:
     def __init__(self, hero_info, team_alignment):
         self.id = hero_info["id"]
         self.name = hero_info["name"]
-        self.alignment = core.cast_alignment(hero_info["biography"]["alignment"])
-        self.fb = self.calculate_fb(team_alignment)
+        self.alignment = cast_alignment(hero_info["biography"]["alignment"])
+        self.fb = self.__calculate_fb(team_alignment)
 
-        self.intelligence = self.calculate_stat(hero_info["powerstats"]["intelligence"])
-        self.strength = self.calculate_stat(hero_info["powerstats"]["strength"])
-        self.speed = self.calculate_stat(hero_info["powerstats"]["speed"])
-        self.durability = self.calculate_stat(hero_info["powerstats"]["durability"])
-        self.power = self.calculate_stat(hero_info["powerstats"]["power"])
-        self.combat = self.calculate_stat(hero_info["powerstats"]["combat"])
-        self.hp = self.calculate_hp()
+        self.intelligence = self.__calculate_stat(hero_info["powerstats"]["intelligence"])
+        self.strength = self.__calculate_stat(hero_info["powerstats"]["strength"])
+        self.speed = self.__calculate_stat(hero_info["powerstats"]["speed"])
+        self.durability = self.__calculate_stat(hero_info["powerstats"]["durability"])
+        self.power = self.__calculate_stat(hero_info["powerstats"]["power"])
+        self.combat = self.__calculate_stat(hero_info["powerstats"]["combat"])
+        self.hp = self.__calculate_hp()
 
         self.attacks = {}
-        list(map(self.calculate_attack_damage, self.ATTACK_NAMES))
+        list(map(self.__calculate_attack_damage, self.ATTACK_NAMES))
 
-    def calculate_fb(self, team_alignment):
+    def __calculate_fb(self, team_alignment):
         """ Calculates the Filiation Coefficient. """
         fb_base = 1 + random.randint(0, 9)
         fb_modifier = 1 if self.alignment == team_alignment else -1
         return pow(fb_base, fb_modifier)
 
-    def calculate_stat(self, base_stat):
+    def __calculate_stat(self, base_stat):
         """ Calculates the real value of a power stat. """
         actual_stamina = random.randint(0, 10)
         real_stat = (2 * base_stat + actual_stamina) * self.fb / 1.1
         return math.floor(real_stat)
 
-    def calculate_hp(self):
+    def __calculate_hp(self):
         """ Calculates Health Points. """
         base_hp = (self.strength * 0.8 + self.durability * 0.7 + self.power) / 2
         actual_stamina = random.randint(0, 10)
         as_modifier = 1 + actual_stamina / 10
         return math.floor(base_hp * as_modifier) + 100
 
-    def calculate_attack_damage(self, attack_name):
+    def __calculate_attack_damage(self, attack_name):
         """ Appends an attack with its damage to the Hero's attacks dictionary. """
         match attack_name:
             case 'Mental':
@@ -63,15 +63,40 @@ class Hero:
 class Team:
     """ Represents a team of five superheroes. """
 
-    def __init__(self, all_heroes, hero_indexes):
-        self.alignment = self.get_team_alignment(all_heroes, hero_indexes)
-        self.heroes = list(map(lambda i: self.create_hero(all_heroes[i]), hero_indexes))
+    def __init__(self, all_heroes, hero_indexes, team_name):
+        self.name = team_name
+        self.alignment = self.__get_team_alignment(all_heroes, hero_indexes)
+        self.heroes = list(map(lambda i: self.__create_hero(all_heroes[i]), hero_indexes))
 
-    def create_hero(self, hero_info):
+    def __create_hero(self, hero_info):
         """ Creates a Hero considering its team alignment. """
         return Hero(hero_info, self.alignment)
 
-    def get_team_alignment(self, all_heroes, hero_indexes):
+    def __get_team_alignment(self, all_heroes, hero_indexes):
         """ Returns the team alignment. """
-        hero_alignments = list(map(lambda i: core.cast_alignment(all_heroes[i]["biography"]["alignment"]), hero_indexes))
+        hero_alignments = list(map(lambda i: cast_alignment(all_heroes[i]["biography"]["alignment"]), hero_indexes))
         return hero_alignments.count(True) > 2
+
+def cast_alignment(alignment_text):
+    """ Casts alignment from string to bool. """
+    return alignment_text == "good"
+
+def get_heroes():
+    """ Returns all heroes from Superheroes API. """
+    endpoint = 'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/all.json'
+    try:
+        response = requests.get(endpoint)
+        return response.json()
+    except requests.exceptions.RequestException as err:
+        message = f'Error while getting superheroes from API.\nMessage: {err}'
+        raise SystemExit(message) from err
+
+def get_hero_indexes(max_index, used_indexes):
+    """ Generates a list of five hero indexes. """
+    hero_indexes = []
+    for _ in range(5):
+        hero_index = random.randint(0, max_index)
+        while hero_index in used_indexes:
+            hero_index = random.randint(0, max_index)
+        hero_indexes.append(hero_index)
+    return hero_indexes
