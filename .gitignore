@@ -1,5 +1,7 @@
 # Custom
 .vscode
+src/thumbnails/*
+!src/thumbnails/placeholder.jpg
 
 # Github generated
 

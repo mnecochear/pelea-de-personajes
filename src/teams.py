@@ -1,5 +1,6 @@
 """ This module contains the classes necessary to represent a team. """
 
+import os
 import random
 import math
 import requests
@@ -8,10 +9,11 @@ class Hero:
     """ Represents a superheroe. """
 
     ATTACK_NAMES = ['Mental', 'Strong', 'Fast']
+    DEFAULT_IMAGE = 'thumbnails/placeholder.jpg'
 
     def __init__(self, hero_info, team_alignment):
-        self.id = hero_info["id"]
         self.name = hero_info["name"]
+        self.image = self.__get_image_path(hero_info["images"]["sm"])
         self.alignment = cast_alignment(hero_info["biography"]["alignment"])
         self.fb = self.__calculate_fb(team_alignment)
 
@@ -22,6 +24,7 @@ class Hero:
         self.power = self.__calculate_stat(hero_info["powerstats"]["power"])
         self.combat = self.__calculate_stat(hero_info["powerstats"]["combat"])
         self.hp = self.__calculate_hp()
+        self.base_hp = self.hp
 
         self.attacks = {}
         list(map(self.__calculate_attack_damage, self.ATTACK_NAMES))
@@ -56,6 +59,22 @@ class Hero:
                 base_damage = self.speed * 0.55 + self.durability * 0.25 + self.strength * 0.2
         self.attacks[attack_name] = math.ceil(base_damage * self.fb)
 
+    def __get_image_path(self, url):
+        """ Returns local relative path to image located at url. """
+        placeholder = self.DEFAULT_IMAGE
+        try:
+            data = requests.get(url)
+            if data.status_code == 200:
+                image_ext = os.path.splitext(url)[-1]
+                image_path = f'thumbnails/{self.name}{image_ext}'
+                with open(image_path, 'wb') as stream:
+                    stream.write(data.content)
+                return image_path
+            return placeholder
+        except requests.exceptions.RequestException as err:
+            print(f'Error occured while retrieving {self.name}\'s image.\nMessage: {err}')
+            return placeholder
+
     def select_attack(self):
         """ Randomly selects an attack name. """
         return random.choice(self.ATTACK_NAMES)
@@ -63,8 +82,9 @@ class Hero:
 class Team:
     """ Represents a team of five superheroes. """
 
-    def __init__(self, all_heroes, hero_indexes, team_name):
-        self.name = team_name
+    def __init__(self, all_heroes, hero_indexes, name, color):
+        self.name = name
+        self.color = color
         self.alignment = self.__get_team_alignment(all_heroes, hero_indexes)
         self.heroes = list(map(lambda i: self.__create_hero(all_heroes[i]), hero_indexes))
 
@@ -88,7 +108,7 @@ def get_heroes():
         response = requests.get(endpoint)
         return response.json()
     except requests.exceptions.RequestException as err:
-        message = f'Error while getting superheroes from API.\nMessage: {err}'
+        message = f'Error occured while retrieving superheroes from API.\nMessage: {err}'
         raise SystemExit(message) from err
 
 def get_hero_indexes(max_index, used_indexes):
@@ -100,3 +120,8 @@ def get_hero_indexes(max_index, used_indexes):
             hero_index = random.randint(0, max_index)
         hero_indexes.append(hero_index)
     return hero_indexes
+
+def delete_image(image_path):
+    """ Deletes the image located at image_path """
+    if os.path.exists(image_path):
+        os.remove(image_path)

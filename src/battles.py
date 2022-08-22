@@ -27,32 +27,26 @@ class Fight:
 
     def __init__(self, opponents):
         self.opponents = opponents
-        self.turns = []
+        self.turns = self.__simulate()
+        self.winner = self.turns[-1].attacker
 
-    def __create_turn(self, turn_number, defender_index):
+    def __create_turn(self, turns, turn_number, defender_index):
         """ Appends a new turn to the fight. """
         attacker = self.opponents[0 if defender_index else 1]
         defender = self.opponents[defender_index]
-        self.turns.append(Turn(attacker, defender, turn_number))
+        turns.append(Turn(attacker, defender, turn_number))
 
-    def simulate(self):
-        """ Creates the turns of a fight and returns its winner. """
+    def __simulate(self):
+        """ Creates and returns the turns of a fight. """
+        turns = []
         turn_count = 1
         defender_index = random.randint(0, 1)  # each fighter has a 50% chance of attacking first
-        self.__create_turn(turn_count, defender_index)
+        self.__create_turn(turns, turn_count, defender_index)
         while self.opponents[defender_index].hp > 0:
             turn_count += 1
             defender_index = 0 if defender_index else 1
-            self.__create_turn(turn_count, defender_index)
-        return self.get_winner()
-
-    def get_winner(self) -> teams.Hero:
-        """ Returns the winner of the fight. """
-        return self.turns[-1].attacker
-
-    def get_loser(self) -> teams.Hero:
-        """ Returns the loser of the fight. """
-        return self.turns[-1].defender
+            self.__create_turn(turns, turn_count, defender_index)
+        return turns
 
 class Battle:
     """ Represents a battle between two teams of 5 superheroes each. """
@@ -60,16 +54,17 @@ class Battle:
     def __init__(self, blue_team, red_team):
         self.blue_team = blue_team
         self.red_team = red_team
-        self.fights = self.__create_fights()
+        self.fights = self.__simulate()
+        self.blue_wins = self.__count_team_wins(blue_team)
+        self.red_wins = self.__count_team_wins(red_team)
+        self.winner = self.red_team if self.red_wins > self.blue_wins else self.blue_team
 
-    def __create_fights(self):
-        """ Creates the battle's fights. """
+    def __simulate(self):
+        """ Creates and returns the fights of a battle. """
         opponentes = list(zip(self.blue_team.heroes, self.red_team.heroes))
         return list(map(Fight, opponentes))
 
-    def simulate(self):
-        """ Simulates the battle's fights and returns the winning team. """
-        blue_winners = list(map(lambda f: f.simulate() in self.blue_team.heroes, self.fights))
-        if blue_winners.count(True) > 2:
-            return self.blue_team.name
-        return self.red_team.name
+    def __count_team_wins(self, team):
+        """ Returns the number of fights won by a team. """
+        fight_winners = list(map(lambda f: f.winner in team.heroes, self.fights))
+        return fight_winners.count(True)
