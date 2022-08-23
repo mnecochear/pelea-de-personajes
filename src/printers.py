@@ -25,7 +25,7 @@ def print_turn(turn: battles.Turn, left_hero, delay):
     print(left + info + right)
     print(SEPARATOR * 3)
 
-    time.sleep(delay)
+    delay_output(delay)
 
 def print_fight(fight: battles.Fight, title, blue_heroes, delay):
     """ Prints a fight. """
@@ -36,11 +36,10 @@ def print_fight(fight: battles.Fight, title, blue_heroes, delay):
     header_block = create_header_block(blue_hero, red_hero, image_height)
 
     print(create_label_block(paint_label(title, 'yellow'), 9, True))
-
-    time.sleep(delay)
-
     print('\n'.join(header_block))
     print(SEPARATOR * 3)
+
+    delay_output(delay)
 
     list(map(lambda t: print_turn(t, blue_hero, delay), fight.turns))
 
@@ -49,6 +48,8 @@ def print_fight(fight: battles.Fight, title, blue_heroes, delay):
 
     print(create_label_block(winner_label, 9, True))
     print(SEPARATOR * 3)
+
+    delay_output(delay)
 
 def print_battle(battle: battles.Battle, delay, fights_to_print):
     """ Prints a battle. """
@@ -69,7 +70,7 @@ def print_battle(battle: battles.Battle, delay, fights_to_print):
     print('\n'.join(header_block))
     print(SEPARATOR * 3)
 
-    time.sleep(delay)
+    delay_output(delay)
 
     for i, fight in enumerate(battle.fights):
         if i + 1 > fights_to_print:
@@ -190,23 +191,9 @@ def decorate(text, element_name, color):
     """ Returns HTML as string. """
     return f'<{element_name} style="color:{color}">{text}</{element_name}>'
 
-def gen_mail_body(battle):
-    """ Returns a summary of the battle. """
-    body = []
-    blue_label = decorate(battle.blue_team.name, 'span', 'blue')
-    red_label = decorate(battle.red_team.name, 'span', 'red')
-    body.append(f'{blue_label} against {red_label}')
-    body.append('<p></p>')
-    for i, fight in enumerate(battle.fights):
-        body.append(f'<p>{decorate(f"Fight #{i+1}", "strong", "black")}</p>')
-        loser_index = 1 if fight.winner == fight.opponents[0] else 0
-        winner_label = f'{fight.winner.name} {decorate("(W)", "span", "green")}'
-        loser_label = f'{fight.opponents[loser_index].name} {decorate("(L)", "span", "red")}'
-        vs_label = decorate("vs", "span", "gray")
-        if loser_index:
-            body.append(f'<p>{winner_label} {vs_label} {loser_label}</p>')
-        else:
-            body.append(f'<p>{loser_label} {vs_label} {winner_label}</p>')
-    body.append('<p></p>')
-    body.append(f'<strong>{battle.winner.name} wins!</strong>')
-    return ''.join(body)
+def delay_output(delay):
+    """ Waits for input if delay < 0 or sleeps otherwise. """
+    if delay < 0:
+        input()
+    else:
+        time.sleep(delay)

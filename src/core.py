@@ -34,6 +34,10 @@ class Main:
         blue_team = teams.Team(all_heroes, blue_team_indexes, 'Blue team', 'blue')
         red_team = teams.Team(all_heroes, red_team_indexes, 'Red team', 'red')
 
+        if delay < 0:
+            print('You are in manual mode, press ENTER to print the next block')
+            printers.delay_output(delay)
+
         battle = battles.Battle(blue_team, red_team)
 
         printers.print_battle(battle, delay, fights_to_print)
@@ -43,7 +47,7 @@ class Main:
                 teams.delete_image(hero.image)
 
         if email != '':
-            mailer.send(printers.gen_mail_body(battle))
+            mailer.send(battle)
 
     def __get_email(self):
         """ Asks for an email address and returns it. """
@@ -58,16 +62,16 @@ class Main:
 
     def __get_delay(self):
         """ Asks for the delay between turns and fights. """
-        delay = input('Enter the delay (in seconds) between turns and fights or press ENTER for no delay:\n')
+        delay = input('Enter the delay (>= 0 in seconds) between turns and fights or press ENTER for manual control:\n')
         while delay != '':
             try:
                 delay = float(delay)
-                if delay > 0:
+                if delay >= 0:
                     break
-                delay = input('Enter a positive float or press ENTER for no delay:\n')
+                delay = input('Enter a float >= 0 or press ENTER for manual control:\n')
             except ValueError:
-                delay = input('Enter a positive float or press ENTER for no delay:\n')
-        return 0 if delay == '' else delay
+                delay = input('Enter a float >= 0 or press ENTER for manual control:\n')
+        return -1 if delay == '' else delay
 
     def __get_fights_to_print(self):
         """ Returns an integer indicating the amount of battles to print. """
