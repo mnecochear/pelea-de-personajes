@@ -108,7 +108,7 @@ def get_heroes():
         response = requests.get(endpoint)
         return response.json()
     except requests.exceptions.RequestException as err:
-        message = f'Error occured while retrieving superheroes from API.\nMessage: {err}'
+        message = 'Error occured while retrieving superheroes from API'
         raise SystemExit(message) from err
 
 def get_hero_indexes(max_index, used_indexes):

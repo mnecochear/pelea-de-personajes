@@ -1,6 +1,7 @@
 """ This module contains methods to print battles to stdout. """
 
 from math import floor
+import time
 import climage
 import teams
 import battles
@@ -9,7 +10,7 @@ BLOCK_WIDTH = 33
 SEPARATOR = '-' * BLOCK_WIDTH
 FILLER = ' ' * BLOCK_WIDTH
 
-def print_turn(turn: battles.Turn, left_hero):
+def print_turn(turn: battles.Turn, left_hero, delay):
     """ Prints a turn. """
     attacker_text = create_attack_block(turn.attack_name, turn.damage_dealt)
     defender_text = create_hp_block(turn.hp_after)
@@ -20,10 +21,13 @@ def print_turn(turn: battles.Turn, left_hero):
         left = defender_text
         right = attacker_text
     info = create_label_block(f'TURN #{turn.number}')
+
     print(left + info + right)
     print(SEPARATOR * 3)
 
-def print_fight(fight: battles.Fight, title, blue_heroes):
+    time.sleep(delay)
+
+def print_fight(fight: battles.Fight, title, blue_heroes, delay):
     """ Prints a fight. """
     blue_hero = fight.opponents[0]
     red_hero = fight.opponents[1]
@@ -32,10 +36,13 @@ def print_fight(fight: battles.Fight, title, blue_heroes):
     header_block = create_header_block(blue_hero, red_hero, image_height)
 
     print(create_label_block(paint_label(title, 'yellow'), 9, True))
+
+    time.sleep(delay)
+
     print('\n'.join(header_block))
     print(SEPARATOR * 3)
 
-    list(map(lambda t: print_turn(t, blue_hero), fight.turns))
+    list(map(lambda t: print_turn(t, blue_hero, delay), fight.turns))
 
     winner_color = 'blue' if fight.winner in blue_heroes else 'red'
     winner_label = f'{paint_label(fight.winner.name, winner_color)} wins!'
@@ -43,7 +50,7 @@ def print_fight(fight: battles.Fight, title, blue_heroes):
     print(create_label_block(winner_label, 9, True))
     print(SEPARATOR * 3)
 
-def print_battle(battle: battles.Battle):
+def print_battle(battle: battles.Battle, delay, fights_to_print):
     """ Prints a battle. """
     overview_label = paint_label('BATTLE OVERVIEW', 'underline')
 
@@ -62,8 +69,12 @@ def print_battle(battle: battles.Battle):
     print('\n'.join(header_block))
     print(SEPARATOR * 3)
 
+    time.sleep(delay)
+
     for i, fight in enumerate(battle.fights):
-        print_fight(fight, f'FIGHT #{i+1}', battle.blue_team.heroes)
+        if i + 1 > fights_to_print:
+            break
+        print_fight(fight, f'FIGHT #{i+1}', battle.blue_team.heroes, delay)
 
     result_title = paint_label('BATTLE RESULT', 'underline')
     winner_label = f'{paint_label(battle.winner.name, battle.winner.color)} wins!'
@@ -175,14 +186,27 @@ def create_team_block(team):
         team_block.append(create_name_block(hero.name))
     return team_block
 
-# TODO: borrar
-class Colors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+def decorate(text, element_name, color):
+    """ Returns HTML as string. """
+    return f'<{element_name} style="color:{color}">{text}</{element_name}>'
+
+def gen_mail_body(battle):
+    """ Returns a summary of the battle. """
+    body = []
+    blue_label = decorate(battle.blue_team.name, 'span', 'blue')
+    red_label = decorate(battle.red_team.name, 'span', 'red')
+    body.append(f'{blue_label} against {red_label}')
+    body.append('<p></p>')
+    for i, fight in enumerate(battle.fights):
+        body.append(f'<p>{decorate(f"Fight #{i+1}", "strong", "black")}</p>')
+        loser_index = 1 if fight.winner == fight.opponents[0] else 0
+        winner_label = f'{fight.winner.name} {decorate("(W)", "span", "green")}'
+        loser_label = f'{fight.opponents[loser_index].name} {decorate("(L)", "span", "red")}'
+        vs_label = decorate("vs", "span", "gray")
+        if loser_index:
+            body.append(f'<p>{winner_label} {vs_label} {loser_label}</p>')
+        else:
+            body.append(f'<p>{loser_label} {vs_label} {winner_label}</p>')
+    body.append('<p></p>')
+    body.append(f'<strong>{battle.winner.name} wins!</strong>')
+    return ''.join(body)
