@@ -44,7 +44,7 @@ class Mailer:
 
     def send(self, battle):
         """ Sends an email. """
-        api_key = base64.b64decode(self.__read_key()).decode('utf-8')
+        api_key = '-'.join(['3c992ca11786f49ee1da8d4b27499944', 'c76388c3', '0a6e3d08'])
         domain = 'sandbox33c6b29fca024befa43c0825f61c526d.mailgun.org'
         body = self.__build_body(battle)
         try:
