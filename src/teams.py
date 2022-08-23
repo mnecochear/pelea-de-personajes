@@ -9,7 +9,7 @@ class Hero:
     """ Represents a superheroe. """
 
     ATTACK_NAMES = ['Mental', 'Strong', 'Fast']
-    DEFAULT_IMAGE = 'thumbnails/placeholder.jpg'
+    DEFAULT_IMAGE = os.path.dirname(__file__) + 'thumbnails/placeholder.jpg'
 
     def __init__(self, hero_info, team_alignment):
         self.name = hero_info["name"]
@@ -66,7 +66,8 @@ class Hero:
             data = requests.get(url)
             if data.status_code == 200:
                 image_ext = os.path.splitext(url)[-1]
-                image_path = f'thumbnails/{self.name}{image_ext}'
+                dirname = os.path.dirname(__file__)
+                image_path = f'{dirname}/thumbnails/{self.name}{image_ext}'
                 with open(image_path, 'wb') as stream:
                     stream.write(data.content)
                 return image_path
