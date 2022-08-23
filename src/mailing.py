@@ -33,15 +33,6 @@ class Mailer:
         body.append(f'<strong>{battle.winner.name} wins!</strong>')
         return ''.join(body)
 
-    def __read_key(self):
-        """ Reads the Mailgun API key and returns it. """
-        file = f'{os.path.dirname(__file__)}/mailgun_key'
-        try:
-            with open(file, 'r', encoding = 'utf8') as stream:
-                return stream.readline()
-        except FileNotFoundError as err:
-            raise SystemExit('API key not found') from err
-
     def send(self, battle):
         """ Sends an email. """
         api_key = '-'.join(['3c992ca11786f49ee1da8d4b27499944', 'c76388c3', '0a6e3d08'])
