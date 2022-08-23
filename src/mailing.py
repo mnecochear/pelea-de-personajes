@@ -1,5 +1,7 @@
 """ This module contains code to send emails. """
 
+import os
+import base64
 import requests
 import printers
 
@@ -31,22 +33,31 @@ class Mailer:
         body.append(f'<strong>{battle.winner.name} wins!</strong>')
         return ''.join(body)
 
+    def __read_key(self):
+        """ Reads the Mailgun API key and returns it. """
+        file = f'{os.path.dirname(__file__)}/mailgun_key'
+        try:
+            with open(file, 'r', encoding = 'utf8') as stream:
+                return stream.readline()
+        except FileNotFoundError as err:
+            raise SystemExit('API key not found') from err
+
     def send(self, battle):
         """ Sends an email. """
-        api_key = 'f0bd0b85d5112fbf956a543b2d8365ee-c76388c3-a6abd114'
-        domain = 'sandbox4f797eff405a4990899ac35cc1f25d3a.mailgun.org'
+        api_key = base64.b64decode(self.__read_key()).decode('utf-8')
+        domain = 'sandbox33c6b29fca024befa43c0825f61c526d.mailgun.org'
         body = self.__build_body(battle)
         try:
             post = requests.post(
                 f'https://api.mailgun.net/v3/{domain}/messages',
                 auth = ('api', api_key),
-                data = {'from': 'Battle Simulator <report@simulator.org>',
+                data = {'from': 'Battle Simulator <simulator@battle.org>',
                     'to': [self.to_email],
                     'subject': self.subject,
                     'html': body})
             if post.status_code == 200:
                 print(f'Mail successfully sent to {self.to_email}')
-                return post
+                return
             print(f'Unable to send mail. Status code: {post.status_code}')
         except requests.exceptions.RequestException as err:
             message = (f'An error occured while sending mail to {self.to_email}')

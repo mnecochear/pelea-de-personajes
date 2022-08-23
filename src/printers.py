@@ -84,8 +84,9 @@ def print_battle(battle: battles.Battle, delay, fights_to_print):
     result_label = f'{blue_wins_label} \U00002694 {red_wins_label}'
 
     print(create_label_block(result_title, 8, True))
-    print(create_label_block(result_label, 18, True))
+    print(FILLER * 3)
     print(create_label_block(winner_label, 9, True))
+    print(create_label_block(result_label, 18, True))
     print(SEPARATOR * 3)
 
 def get_image_lines(path):

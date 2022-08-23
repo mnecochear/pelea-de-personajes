@@ -59,6 +59,16 @@ class Hero:
                 base_damage = self.speed * 0.55 + self.durability * 0.25 + self.strength * 0.2
         self.attacks[attack_name] = math.ceil(base_damage * self.fb)
 
+    def __save_image(self, path, content):
+        """ Saves image to disk. """
+        try:
+            with open(path, 'wb') as stream:
+                stream.write(content)
+            return path
+        except FileNotFoundError:
+            print('Unable to save image, using placeholder instead')
+            return self.DEFAULT_IMAGE
+
     def __get_image_path(self, url):
         """ Returns local relative path to image located at url. """
         placeholder = self.DEFAULT_IMAGE
@@ -68,9 +78,7 @@ class Hero:
                 image_ext = os.path.splitext(url)[-1]
                 dirname = os.path.dirname(__file__)
                 image_path = f'{dirname}/thumbnails/{self.name}{image_ext}'
-                with open(image_path, 'wb') as stream:
-                    stream.write(data.content)
-                return image_path
+                return self.__save_image(image_path, data.content)
             return placeholder
         except requests.exceptions.RequestException as err:
             print(f'Error occured while retrieving {self.name}\'s image.\nMessage: {err}')
